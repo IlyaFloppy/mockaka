@@ -1,0 +1,60 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  MODULE:
+    sh: head -n 1 go.mod | cut -c 8- # skip first 7 characters ("module ")
+
+tasks:
+  gen:
+    cmds:
+      - task: generate-proto
+
+  test:
+    desc: Run tests
+    cmds:
+      - echo "- Running tests"
+      - go test -v -race -cpu=1,2,4 -coverprofile=coverage.out ./...
+  
+  lint:
+    desc: Run golangci-lint
+    cmds:
+      - echo "- Running linter"
+      - golangci-lint run
+
+  format:
+    desc: Format code
+    cmds:
+      - echo "- Formatting code"
+      - go fmt ./...
+
+  generate-proto:
+    desc: Generate proto code
+    cmds:
+      - echo "- Generating proto code"
+      - task: generate-grpc-service
+        vars: {
+          INPUT_DIRS: "example/stringscache/api",
+          PROTO_DIR: "example/stringscache/api",
+          OUT_DIR: ".",
+          MODULE: "{{.MODULE}}"
+        }
+  
+  generate-grpc-service:
+    desc: Generate grpc service from PROTO_DIR passing INPUT_DIRS to protoc and writing output files into OUT_DIR.
+    cmds:
+      - mkdir -p {{.OUT_DIR}}
+      - |
+        protoc \
+        -I $(go env GOPATH)/src \
+        {{if .INPUT_DIRS -}}
+        {{range $i, $path := splitList ";" .INPUT_DIRS -}}
+        {{printf "-I %s \\" $path }}
+        {{end -}}
+        {{end -}}
+        --go_out={{.OUT_DIR}} \
+        --go-grpc_out={{.OUT_DIR}} \
+        --go_opt=module={{.MODULE}} \
+        --go-grpc_opt=module={{.MODULE}} \
+        {{.PROTO_DIR}}/*.proto
