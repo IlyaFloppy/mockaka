@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+option go_package = "github.com/IlyaFloppy/mockaka/example/stringscache/api/scpb";
+package scpb;
+
+service StringsCacheService {
+  rpc Reverse(Message) returns (Message) {}
+  rpc Invalidate(InvalidateRequest) returns (InvalidateResponse) {}
+}
+
+message Message { string message = 1; }
+
+message InvalidateRequest {}
+message InvalidateResponse {}
