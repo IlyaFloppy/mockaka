@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+option go_package = "github.com/IlyaFloppy/mockaka/example/stringscache/api/spb";
+package spb;
+
+service StringsService {
+  rpc Reverse(Message) returns (Message) {}
+  rpc ReverseStream(stream Message) returns (stream Message) {}
+}
+
+message Message { string message = 1; }
